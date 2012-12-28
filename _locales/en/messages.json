@@ -1,11 +1,11 @@
 {
 	"EXTENSION_NAME": {
-		"message": "Google Voice SMS Scheduler"
+		"message": "Google Voice SMS Text Scheduler"
 		, "description": "Extension name."
 	}
 
 	, "EXTENSION_DESCRIPTION": {
-		"message": "Schedules your Google Voice SMS messages so you can send them at any point in the future as long as you don't go over Google's sending limits."
+		"message": "For those of us who love and use Google Voice a lot. Adds basic functionality to the Google Voice web page, letting you schedule your SMS text messages so you can send them at any point in the future as long as you don't go over Google's sending limits. \n\nScheduled messages are stored and synced across Chrome browsers you log into; they are also scheduled in UTC/GMT time and are sent based on your browser-detected date & time (through JavaScript). \n\nRequires user to be logged into Google Voice and computer to be on; installing the official Google Voice extension is also recommended."
 		, "description": "Extension description."
 	}
 
