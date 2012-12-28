@@ -1,0 +1,67 @@
+{
+	"EXTENSION_NAME": {
+		"message": "Google Voice SMS Scheduler"
+		, "description": "Extension name."
+	}
+
+	, "EXTENSION_DESCRIPTION": {
+		"message": "Schedules your Google Voice SMS messages so you can send them at any point in the future as long as you don't go over Google's sending limits."
+		, "description": "Extension description."
+	}
+
+	, "BROWSER_ACTION_TITLE": {
+		"message": "GV SMS Scheduler"
+		, "description": "Browser action default title."
+	}
+
+	, "ERROR_RECIPIENTS_MISSING": {
+		"message": " - At least 1 recipient required."
+		, "description": "Error message when user does not provide enough recipients."
+	}
+
+	, "ERROR_RECIPIENTS_OVERLIMIT": {
+		"message": " - Google Voice limit at 5 recipients."
+		, "description": "Error message when user provides too many recipients."
+	}
+
+	, "ERROR_MESSAGE_TEXT_MISSING": {
+		"message": " - Message text required."
+		, "description": "Error message when user does not provide message text."
+	}
+
+	, "ERROR_MESSAGE_TEXT_OVERLIMIT": {
+		"message": " - Google Voice text limit at 320 characters."
+		, "description": "Error message when user-provided message text is over the character limit."
+	}
+
+	, "ERROR_DATETIME_PAST": {
+		"message": " - Scheduled message date and time must be in the future."
+		, "description": "Error message when user schedules message for a date and time in the past."
+	}
+
+	, "WARNING_CONFIRM_CLEAR": {
+		"message": "Are you sure you want to clear all scheduled SMS messages? This cannot be undone!"
+		, "description": "Warning message when user is about to clear all scheduled messages."
+	}
+
+	, "WARNING_CONFIRM_REMOVE": {
+		"message": "Are you sure you want to remove this scheduled SMS message? This cannot be undone!"
+		, "description": "Warning message when user is about to remove a scheduled message."
+	}
+
+	, "STATUS_NO_MESSAGES": {
+		"message": "No scheduled messages!"
+		, "description": "Status message when there are no scheduled messages to display."
+	}
+
+	, "TEMPLATE": {
+		"message": "Text"
+		, "description": "Template"
+	}
+
+	, "TEMPLATE": {
+		"message": "Text"
+		, "description": "Template"
+	}
+
+}

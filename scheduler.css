@@ -1,0 +1,73 @@
+#gv-scheduler-container
+{
+	width: 100%;
+	padding: 16px;
+	border-bottom: 1px solid #ddd;
+}
+
+#gv-scheduler-container h3
+{
+	color: #888;
+	vertical-align: top;
+}
+
+#gv-scheduler-reload
+{
+	vertical-align: middle;
+}
+
+#gv-scheduler-list
+{
+}
+
+#gv-scheduler-list li
+{
+	position: relative;
+	padding-top: 24px;
+	border-top: 1px solid #ddd;
+}
+
+#gv-scheduler-list li h4
+{
+	vertical-align: middle;
+}
+
+#gv-scheduler-list li h4 span
+{
+	color: #999;
+	font-variant: small-caps;
+}
+
+.gv-scheduler-remove
+{
+	vertical-align: middle;
+	opacity: 0.5;
+	filter: alpha(opacity=50);
+}
+.gv-scheduler-remove:hover
+{
+	opacity: 1.0;
+	filter: alpha(opacity=100);
+}
+
+#gv-scheduler-list li p
+{
+}
+
+/* UI edits to text popup in G.Voice */
+#gv-scheduler
+{
+	margin-top: 8px;
+	border-top: 1px solid #ddd;
+	padding-top: 8px;
+}
+
+#gv-scheduler-input
+{
+	width: 106px;
+}
+
+#gv-scheduler-calendar
+{
+	vertical-align: middle;
+}
