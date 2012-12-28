@@ -7,6 +7,7 @@ Just a fun side project in my spare time. This simple chrome extension uses a co
 Had to backtrack through the official Google Voice extension to find the API calls, still having trouble finding out how to actually send the darn sms messages, but everything else seems to be here. A work in progress... :P
 
 Some caveats:
+ - User has to be logged into Google Voice and have the Official Google Voice Chrome extension installed.
  - Scheduled messages will only be sent while Chrome's background processes are still running. Using the "background" flag to persist it, but can be manually killed.
  - I use Chrome's sync storage, so the texts are synced across browsers where you're signed in. Depending on latency of your internet connection, you may end up sending the same text more than once.
  - Scheduled messages only display the recipients as numbers; didn't want to deal with matching them up with your Google Contacts phone book.
