@@ -11,7 +11,7 @@ still having trouble finding out how to actually send the darn sms messages,
 but everything else seems to be here. A work in progress... :P
 
 Some caveats:
- - Scheduled messages will only be sent while Chrome's background processes are still running.
+ - Scheduled messages will only be sent while Chrome's background processes are still running. Using the "background" flag to persist it, but can be manually killed.
  - I use Chrome's sync storage, so the texts are synced across browsers where you're signed in. Depending on latency of your internet connection, you may end up sending the same text more than once.
  - Scheduled messages only display the recipients as numbers; didn't want to deal with matching them up with your Google Contacts phone book.
 
@@ -21,7 +21,8 @@ Technologies used:
  - Trent Richardson's Time Picker (http://trentrichardson.com/examples/timepicker/)
  - Chrome's Sync Storage (scheduled messages are synced across browsers)
  
-Hope this is useful to someone out there, and feel free to help contribute and expand on this project!
+Hope this is useful to someone out there; would love any help optimizing and improving on it.
+Feel free to help contribute and expand on this project!
 
 
 . Carlin
