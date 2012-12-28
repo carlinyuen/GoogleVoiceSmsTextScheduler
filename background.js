@@ -158,7 +158,7 @@ function processSendSMSResponse(message, response, sendResponse)
 		if (data.ok)
 		{
 			// Tell tabs to remove message from UI
-			chrome.tabs.query("*://www.google.com/voice/*", function(tabs)
+			chrome.tabs.query({url:"*://www.google.com/voice/*"}, function(tabs)
 			{
 				for (var i = tabs.length - 1; i >= 0; --i)
 				{
