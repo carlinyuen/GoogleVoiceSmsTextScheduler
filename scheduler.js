@@ -111,26 +111,11 @@ function createScheduledListItemHTML(recipients, dateTime, text, id)
 			.append([
 				'	<a class="gv-scheduler-send" href="#" title="Send this message now">'
 				, '		<img src="' + sendIconURL + '" alt="Send" /></a>'
-				, '	<a class="gv-scheduler-remove" href="#" title="Remove SMS Message">'
+				, '	<a class="gv-scheduler-remove" href="#" title="Remove this message">'
 				, '		<img src="' + removeIconURL + '" alt="x"></a>'
 				, '	<br />'].join('\n'))
-			.append($('<span>').text(dateTime))
+			.append($('<span>').addClass('gv-scheduler-dateTime').text(dateTime))
 		).append($('<p>').text(text));
-/*
-	return [
-		'<li id="' + $.text(id) + '">'
-		, '	<h4>' + $.text(recipients)
-		, '		<a class="gv-scheduler-send" href="#" title="Send this message now">'
-		, '			<img src="' + sendIconURL + '" alt="Send" /></a>'
-		, '		<a class="gv-scheduler-remove" href="#" title="Remove SMS Message">'
-		, '			<img src="' + removeIconURL + '" alt="x"></a><br />'
-		, '		<span> scheduled for ' + dateTime
-		, '		</span>'
-		, '	</h4>'
-		, '	<p>' + text + '</p>'
-		, '</li>'
-	].join('\n');
-//	*/
 }
 
 // Load scheduled messages and display them
@@ -224,8 +209,6 @@ function scheduleMessage()
 	// Schedule message now
 	chrome.storage.sync.get(STORAGE_KEY, function(items)
 	{
-		console.log("scheduleMessage", items);
-
 		// If something returned, use that instead
 		var messages = [];
 		if (items && items[STORAGE_KEY]) {
@@ -262,12 +245,12 @@ function scheduleMessage()
 				}
 				else	// Success! Add to list
 				{
-					console.log("scheduledMessages saved!");
+					console.log("scheduleMessage success:", recipients, dateTime, text);
 
 					// Clear fields and hide popup
 					$("#gc-quicksms-text2").val('');
 					$("#gv-scheduler-input").val('');
-					$("div.gc-bubble.gc-bubble-quicksms2").fadeOut('fast');
+					$('.goog-bubble-close-button').click();
 					$("#gv-scheduler-list").append(
 						createScheduledListItemHTML(recipients, dateTime, text,
 							ID_PREFIX + dateTime.getTime()));
@@ -294,6 +277,7 @@ function sendScheduledMessage()
 		messageID: id
 	}, function(response) {
 		console.log("sendMessage response:", response);
+		$('#' + id).fadeOut('normal').remove();
 	});
 }
 
@@ -315,6 +299,7 @@ function removeScheduledMessage()
 		messageID: id,
 	}, function(response) {
 		console.log("removeMessage response:", response);
+		$('#' + id).fadeOut('normal').remove();
 	});
 }
 
@@ -336,6 +321,4 @@ function clearScheduledMessages()
 			.fadeIn('normal');
 	});
 }
-
-
 

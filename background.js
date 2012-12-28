@@ -41,13 +41,13 @@ function initExtension()
 }
 
 // Handle Google Voice data request response
-function processGoogleDataRequest(response)
+function processGoogleDataResponse(response)
 {
 	if (response && response.responseText)
 	{
 		var data = $.parseJSON(response.responseText);
 		_rnr_se = data.r;
-		console.log("processGoogleDataRequest", _rnr_se);
+		console.log("processGoogleDataResponse", _rnr_se);
 
 		// Check if we successfully retrieved the key
 		if (_rnr_se)
@@ -73,10 +73,13 @@ chrome.extension.onMessage.addListener(
 		if (request.action == "sendMessage")
 		{
 			sendMessage(request.messageID, sendResponse);
+			return true;
 		}
-		else if (request.action == "removeMessage")
+
+		if (request.action == "removeMessage")
 		{
 			removeMessage(request.messageID, sendResponse);
+			return true;
 		}
 	});
 
@@ -108,6 +111,7 @@ function sendMessage(messageID, sendResponse)
 			// Message found
 			if (messages[i].id == messageID)
 			{
+				var message = messages[i];
 				$.ajax({
 					type: 'POST',
 					url: GOOGLE_VOICE_SEND_SMS_REQUEST_URL,
@@ -119,12 +123,12 @@ function sendMessage(messageID, sendResponse)
 						_rnr_se: _rnr_se,
 					},
 					success: function(response) {
-						processSendSMSResponse(response, sendResponse);
+						processSendSMSResponse(message, response, sendResponse);
 					},
 					error: function(response) {
-						processSendSMSResponse(response, sendResponse);
+						processSendSMSResponse(message, response, sendResponse);
 					}
-				}):
+				});
 
 				return;
 			}
@@ -141,7 +145,7 @@ function sendMessage(messageID, sendResponse)
 	});
 }
 
-function processSendSMSResponse(response, sendResponse)
+function processSendSMSResponse(message, response, sendResponse)
 {
 	if (response)
 	{
@@ -159,7 +163,7 @@ function processSendSMSResponse(response, sendResponse)
 			}
 
 			// Go through messages and remove sent message
-			removeMessage(message, sendResponse);
+			removeMessage(message.id, sendResponse);
 		}
 		else	// Error!
 		{
