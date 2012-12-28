@@ -6,12 +6,11 @@ var GV_RECIPIENT_LIMIT = 5;
 var GV_TEXT_CHAR_LIMIT = 320;
 var ID_PREFIX = "message_";
 
-var calendarIconURL = chrome.extension.getURL("images/calendar2.png");
+var calendarIconURL = chrome.extension.getURL("images/calendar.png");
 var reloadIconURL	= chrome.extension.getURL("images/reload.png");
 var refreshIconURL	= chrome.extension.getURL("images/refresh.gif");
 var loadingIconURL	= chrome.extension.getURL("images/loading.gif");
 var removeIconURL	= chrome.extension.getURL("images/remove.png");
-var settingsIconURL = chrome.extension.getURL("images/settings.png");
 var sendIconURL		= chrome.extension.getURL("images/send.png");
 
 // Document ready function
