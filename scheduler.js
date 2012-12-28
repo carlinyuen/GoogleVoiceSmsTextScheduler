@@ -304,7 +304,9 @@ function removeScheduledMessage()
 		{
 			console.log("removeMessage response:", response);
 			if (response.status == OK) {
-				$('#' + id).fadeOut('normal').remove();
+				$('#' + id).fadeOut('normal', function() {
+					$(this).remove();
+				});
 			} else {
 				// Display error?
 			}
@@ -339,7 +341,9 @@ chrome.extension.onMessage.addListener(
 
 		if (request.action == "messageSent")
 		{
-			$('#' + request.messageID).fadeOut('normal').remove();
+			$('#' + request.messageID).fadeOut('normal', function() {
+				$(this).remove();
+			});
 			return true;
 		}
 
