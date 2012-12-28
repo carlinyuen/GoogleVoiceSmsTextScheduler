@@ -2,9 +2,7 @@ Google Chrome Extension : Google Voice SMS Text Scheduler
 ===================
 gc-gv-sms-scheduler
 
-Just a fun side project in my spare time. This simple chrome extension uses a content script to insert css and js into the Google Voice site (http[s]://www.google.com/voice/*), allowing you to schedule SMS texts to be sent at a later time. 
-
-Had to backtrack through the official Google Voice extension to find the API calls, still having trouble finding out how to actually send the darn sms messages, but everything else seems to be here. A work in progress... :P
+Just a fun side project in my spare time. This simple chrome extension uses a content script to insert css and js into the Google Voice site (http[s]://www.google.com/voice/*), allowing you to schedule SMS texts to be sent at a later time.
 
 Some caveats:
  - User has to be logged into Google Voice and have the Official Google Voice Chrome extension installed.
