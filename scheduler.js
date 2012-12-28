@@ -1,5 +1,6 @@
 
 // Global Variables & Constants
+var STORAGE_KEY = 'scheduledMessages';
 var GV_RECIPIENT_LIMIT = 5;
 var GV_TEXT_CHAR_LIMIT = 320;
 var ID_PREFIX = "message_";
@@ -49,8 +50,6 @@ function setupScheduledView()
 		, '				<img src="' + reloadIconURL + '" alt="Reload" /></a>'
 		, '			<a id="gv-scheduler-clear" href="#" title="Clear all Scheduled SMS Messages">'
 		, '				<img src="' + removeIconURL + '" alt="Clear" /></a>'
-		, '			<a class="gv-scheduler-send" href="#" title="Send this message now">'
-		, '				<img src="' + sendIconURL + '" alt="Send" /></a>'
 		, '		</span>'
 		, '	</h3>'
 		, '	<ul id="gv-scheduler-list">'
@@ -64,8 +63,8 @@ function setupScheduledView()
 	// Clear icon
 	$("#gv-scheduler-clear").click(clearScheduledMessages);
 
-	// Send icon
-	$(".gv-scheduler-send").click(sendMessage);
+	// Binding for immediate sending of scheduled messages
+	$("#gv-scheduler-list").on("click", ".gv-scheduler-send", sendScheduledMessage);
 
 	// Binding for removing of scheduled messages
 	$("#gv-scheduler-list").on("click", ".gv-scheduler-remove", removeScheduledMessage);
@@ -107,10 +106,23 @@ function setupScheduler()
 // Generates the HTML for a list item in the scheduled SMS message list
 function createScheduledListItemHTML(recipients, dateTime, text, id)
 {
+	return $('<li>').attr("id", id)
+		.append($('<h4>').text(recipients)
+			.append([
+				'	<a class="gv-scheduler-send" href="#" title="Send this message now">'
+				, '		<img src="' + sendIconURL + '" alt="Send" /></a>'
+				, '	<a class="gv-scheduler-remove" href="#" title="Remove SMS Message">'
+				, '		<img src="' + removeIconURL + '" alt="x"></a>'
+				, '	<br />'].join('\n'))
+			.append($('<span>').text(dateTime))
+		).append($('<p>').text(text));
+/*
 	return [
-		'<li>'
-		, '	<h4>To: ' + recipients
-		, '		<a id="' + id + '" class="gv-scheduler-remove" href="#" title="Remove SMS Message">'
+		'<li id="' + $.text(id) + '">'
+		, '	<h4>' + $.text(recipients)
+		, '		<a class="gv-scheduler-send" href="#" title="Send this message now">'
+		, '			<img src="' + sendIconURL + '" alt="Send" /></a>'
+		, '		<a class="gv-scheduler-remove" href="#" title="Remove SMS Message">'
 		, '			<img src="' + removeIconURL + '" alt="x"></a><br />'
 		, '		<span> scheduled for ' + dateTime
 		, '		</span>'
@@ -118,6 +130,7 @@ function createScheduledListItemHTML(recipients, dateTime, text, id)
 		, '	<p>' + text + '</p>'
 		, '</li>'
 	].join('\n');
+//	*/
 }
 
 // Load scheduled messages and display them
@@ -131,20 +144,19 @@ function reloadScheduledView()
 	$("#gv-scheduler-list").html("");
 
 	// Get scheduled messages
-	var key = 'scheduledMessages';
-	chrome.storage.sync.get(key, function(items)
+	chrome.storage.sync.get(STORAGE_KEY, function(items)
 	{
 		console.log("reloadScheduledView", items);
 
 		// Check if nothing returned
-		if (!items || !items[key] || !items[key].length)
+		if (!items || !items[STORAGE_KEY] || !items[STORAGE_KEY].length)
 		{
 			$('#gv-scheduler-list').append('<li><strong>'
 				+ chrome.i18n.getMessage("STATUS_NO_MESSAGES") + '</strong></li>');
 		}
 		else	// Loop through and display them
 		{
-			var messages = items[key];
+			var messages = items[STORAGE_KEY];
 			for (var i = messages.length - 1; i >= 0; --i)
 			{
 				var message = messages[i];
@@ -169,7 +181,6 @@ function reloadScheduledView()
 			$("#gv-scheduler-reload img").attr("src", reloadIconURL);
 		}, reloadIconRefreshDelay);
 	});
-
 }
 
 // Schedule a message
@@ -211,15 +222,14 @@ function scheduleMessage()
 	}
 
 	// Schedule message now
-	var key = 'scheduledMessages';
-	chrome.storage.sync.get(key, function(items)
+	chrome.storage.sync.get(STORAGE_KEY, function(items)
 	{
 		console.log("scheduleMessage", items);
 
 		// If something returned, use that instead
 		var messages = [];
-		if (items && items[key]) {
-			messages = items[key];
+		if (items && items[STORAGE_KEY]) {
+			messages = items[STORAGE_KEY];
 		}
 
 		// If no messages before, clear list
@@ -266,10 +276,31 @@ function scheduleMessage()
 	});
 }
 
+// Send scheduled message
+function sendScheduledMessage()
+{
+	var id = $(this).parents('li').attr('id');
+	console.log("sendScheduledMessage", id);
+
+	// Show confirmation popup just to make sure
+	var confirmed = confirm(chrome.i18n.getMessage("WARNING_CONFIRM_SEND"));
+	if (!confirmed) {
+		return;
+	}
+
+	// Send message to background process to send
+	chrome.extension.sendMessage({
+		action: "sendMessage",
+		messageID: id
+	}, function(response) {
+		console.log("sendMessage response:", response);
+	});
+}
+
 // Removes message that was scheduled
 function removeScheduledMessage()
 {
-	var id = $(this).attr("id");
+	var id = $(this).parents('li').attr('id');
 	console.log("removeScheduledMessage", id);
 
 	// Show confirmation popup just to make sure
@@ -278,48 +309,16 @@ function removeScheduledMessage()
 		return;
 	}
 
-	// Get scheduled messages and remove the one selected
-	var key = 'scheduledMessages';
-	chrome.storage.sync.get(key, function(items)
-	{
-		// Check if there's data
-		if (!items || !items[key] || !items[key].length)
-		{
-			console.log("Nothing to be removed!");
-			alert("This message does not exist anymore. Please reload the list.");
-			return;
-		}
-
-		// Loop through and identify message
-		var messages = items[key];
-		for (var i = messages.length - 1; i >= 0; --i)
-		{
-			var message = messages[i];
-
-			if (message.id == id)
-			{
-				messages.splice(i, 1);
-				break;
-			}
-		};
-
-		// Store modified data
-		chrome.storage.sync.set(
-			{"scheduledMessages": messages}
-			, function()
-			{
-				if (chrome.runtime.lastError) {
-					console.log(chrome.runtime.lastError);
-				}
-				else	// Success! Remove element from list
-				{
-					console.log("removeScheduledMessage success");
-					$("#" + id).parents('li').fadeOut('normal', function() {$(this).remove();});
-				}
-			});
+	// Send message to background process to remove
+	chrome.extension.sendMessage({
+		action: "removeMessage",
+		messageID: id,
+	}, function(response) {
+		console.log("removeMessage response:", response);
 	});
 }
 
+// Clears all scheduled messages
 function clearScheduledMessages()
 {
 	// Show confirmation popup just to make sure
@@ -338,82 +337,5 @@ function clearScheduledMessages()
 	});
 }
 
-
-// Send SMS message through google voice
-function sendMessage()
-{
-	console.log("sendMessage");
-
-	var url = "https://www.google.com/voice/b/0/sms/send/"
-			+ "?id="
-			+ "&phoneNumber=" + encodeURIComponent("(234) 567-9763")
-			+ "&text=" + encodeURIComponent("HELLO WORLD")
-			+ "&sendErrorSms=0"
-			+ "&_rnr_se=epuzY1XtF+UHSQGXAJoarSJtWLA=";
-	console.log(url);
-	$.ajax({
-		type: 'POST',
-		url: url,
-		success: function(response)
-		{
-			console.log("success", response);
-
-			// Go through messages and remove sent message
-			var key = 'scheduledMessages';
-			chrome.storage.sync.get(key, function(items)
-			{
-				// Check if no messages - this shouldn't happen
-				if (!items || !items[key] || !items[key].length) {
-					console.log("ERROR : No messages even though we just sent one!");
-					return;
-				}
-
-				// Loop through and check if there's an id match
-				var messages = items[key];
-				var messageFound = false;
-				for (var i = messages.length - 1; i >= 0; --i)
-				{
-					if (messages[i].id == message.id)
-					{
-						// Test for notification support, and show notification
-						if (window.webkitNotifications) {
-							showNotification("images/icon48.png"
-								, "SMS Message sent to " + message.recipients
-								, message.text);
-						}
-
-						// Delete from data
-						messages.splice(i, 1);
-						messageFound = true;
-						break;
-					}
-				}
-
-				// If message was found and removed, update data
-				if (messageFound)
-				{
-					// Store new data back in, and print error if any
-					chrome.storage.sync.set(
-						{"scheduledMessages": messages}
-						, function()
-						{
-							if (chrome.runtime.lastError) {
-								console.log(chrome.runtime.lastError);
-							} else {
-								console.log("scheduledMessages updated");
-							}
-						});
-				}
-				else	// Error - couldn't find it!
-				{
-					console.log("ERROR : Couldn't find and remove message that was just sent!");
-				}
-			});
-		},
-		error: function(response) {
-			console.log("error", response);
-		},
-	});
-}
 
 

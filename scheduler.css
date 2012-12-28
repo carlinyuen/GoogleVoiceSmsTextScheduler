@@ -31,11 +31,19 @@
 {
 	vertical-align: middle;
 }
+#gv-scheduler-list li h4:before
+{
+	content:"To: ";
+}
 
 #gv-scheduler-list li h4 span
 {
 	color: #999;
 	font-variant: small-caps;
+}
+#gv-scheduler-list li h4 span:before
+{
+	content:"Scheduled for ";
 }
 
 .gv-scheduler-remove

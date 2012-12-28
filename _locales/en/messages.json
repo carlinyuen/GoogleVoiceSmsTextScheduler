@@ -49,14 +49,29 @@
 		, "description": "Warning message when user is about to remove a scheduled message."
 	}
 
+	, "WARNING_CONFIRM_SEND": {
+		"message": "Are you sure you want to send this scheduled SMS message now? This cannot be undone!"
+		, "description": "Warning message when user is about to send a scheduled message early."
+	}
+
 	, "STATUS_NO_MESSAGES": {
 		"message": "No scheduled messages!"
 		, "description": "Status message when there are no scheduled messages to display."
 	}
 
-	, "TEMPLATE": {
-		"message": "Text"
-		, "description": "Template"
+	, "ERROR_MISSING_MESSAGE": {
+		"message": "Could not find message!"
+		, "description": "Error message when a process could not find a message it was supposed to."
+	}
+
+	, "ERROR_INVALID_INPUT": {
+		"message": "Invalid sms message data!"
+		, "description": "Error message when a process receives invalid data."
+	}
+
+	, "ERROR_API_ISSUE": {
+		"message": "Could not retrieve data from Google Voice!"
+		, "description": "Error message when a process cannot make request to API calls."
 	}
 
 	, "TEMPLATE": {
