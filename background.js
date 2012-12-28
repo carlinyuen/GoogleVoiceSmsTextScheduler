@@ -81,6 +81,8 @@ chrome.extension.onMessage.addListener(
 			removeMessage(request.messageID, sendResponse);
 			return true;
 		}
+
+		return false;
 	});
 
 // Send SMS message with given ID through google voice
@@ -155,6 +157,18 @@ function processSendSMSResponse(message, response, sendResponse)
 		// Check if we successfully sent sms
 		if (data.ok)
 		{
+			// Tell tabs to remove message from UI
+			chrome.tabs.query("*://www.google.com/voice/*", function(tabs)
+			{
+				for (int i = tabs.length - 1; i >= 0; --i)
+				{
+					chrome.tabs.sendMessage(tabs[i].id, {
+						action: "messageSent",
+						messageID: message.id
+					});
+				}
+			});
+
 			// Test for notification support, and show notification
 			if (window.webkitNotifications) {
 				showNotification("images/icon48.png"

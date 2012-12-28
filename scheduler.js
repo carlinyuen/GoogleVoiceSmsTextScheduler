@@ -1,5 +1,6 @@
 
 // Global Variables & Constants
+var OK = 0;
 var STORAGE_KEY = 'scheduledMessages';
 var GV_RECIPIENT_LIMIT = 5;
 var GV_TEXT_CHAR_LIMIT = 320;
@@ -275,10 +276,13 @@ function sendScheduledMessage()
 	chrome.extension.sendMessage({
 		action: "sendMessage",
 		messageID: id
-	}, function(response) {
-		console.log("sendMessage response:", response);
-		$('#' + id).fadeOut('normal').remove();
-	});
+	}, function(response)
+		{
+			console.log("sendMessage response:", response);
+			if (response.status != OK) {
+				// Display error?
+			}
+		});
 }
 
 // Removes message that was scheduled
@@ -297,10 +301,15 @@ function removeScheduledMessage()
 	chrome.extension.sendMessage({
 		action: "removeMessage",
 		messageID: id,
-	}, function(response) {
-		console.log("removeMessage response:", response);
-		$('#' + id).fadeOut('normal').remove();
-	});
+	}, function(response)
+		{
+			console.log("removeMessage response:", response);
+			if (response.status == OK) {
+				$('#' + id).fadeOut('normal').remove();
+			} else {
+				// Display error?
+			}
+		});
 }
 
 // Clears all scheduled messages
@@ -321,4 +330,20 @@ function clearScheduledMessages()
 			.fadeIn('normal');
 	});
 }
+
+// Handler for messages from the background page indicating
+//  when a scheduled message is sent
+chrome.extension.onMessage.addListener(
+	function(request, sender, sendResponse)
+	{
+		console.log(request, sender);
+
+		if (request.action == "messageSent")
+		{
+			$('#' + request.messageID).fadeOut('normal').remove();
+			return true;
+		}
+
+		return false;
+	});
 

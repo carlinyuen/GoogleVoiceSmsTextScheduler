@@ -46,9 +46,8 @@
 		"background"
 		, "notifications"
 		, "storage"
-		, "http://voice.google.com/"
-		, "https://voice.google.com/"
-		, "http://www.google.com/voice*"
-		, "https://www.google.com/voice*"
+		, "tabs"
+		, "*://voice.google.com/"
+		, "*://www.google.com/voice/*"
 	]
 }
