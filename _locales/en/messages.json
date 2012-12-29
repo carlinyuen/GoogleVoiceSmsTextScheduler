@@ -1,11 +1,11 @@
 {
 	"EXTENSION_NAME": {
-		"message": "Google Voice SMS Text Scheduler"
+		"message": "SMS Text Message Scheduler for Google Voice™"
 		, "description": "Extension name."
 	}
 
 	, "EXTENSION_DESCRIPTION": {
-		"message": "Schedule when Google Voice will send your SMS text messages!"
+		"message": "Schedule your Google Voice™ SMS text messages to be sent in the future!"
 		, "description": "Extension description."
 	}
 
