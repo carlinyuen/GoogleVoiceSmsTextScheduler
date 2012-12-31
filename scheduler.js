@@ -79,19 +79,23 @@ function setupScheduler()
 	// Add button and form elements
 	$("#gc-quicksms2").append([
 		'<div id="gv-scheduler">'
-		, '	<div id="gv-scheduler-button" class="goog-inline-block gc-quicksms-send goog-button goog-button-base" role="button" style=""><div class="goog-inline-block goog-button-base-outer-box" style=""><div class="goog-inline-block goog-button-base-inner-box" style=""><div class="goog-button-base-pos" style=""><div class="goog-button-base-top-shadow" style="">&nbsp;</div><div class="goog-button-base-content" style="">Schedule</div></div></div></div></div>'
 		, '	<div id="gv-scheduler-datetime" class="goog-inline-block">'
-		, '		<input id="gv-scheduler-input" class="gc-text" type="text" />'
 		, '		<a id="gv-scheduler-calendar" href="#" title="Schedule SMS Message">'
-		, '			<img src="' + calendarIconURL + '" alt="Date Picker" />'
-		, '		</a>'
+		, '			<img src="' + calendarIconURL + '" alt="Date Picker" /></a>'
+		, '		<input id="gv-scheduler-input" class="gc-text" type="text" />'
 		, '	</div>'
+		, '	<div id="gv-scheduler-button" class="goog-inline-block gc-quicksms-send goog-button goog-button-base" role="button" style="" tabindex="0"><div class="goog-inline-block goog-button-base-outer-box" style=""><div class="goog-inline-block goog-button-base-inner-box" style=""><div class="goog-button-base-pos" style=""><div class="goog-button-base-top-shadow" style="">&nbsp;</div><div class="goog-button-base-content" style="">Schedule</div></div></div></div></div>'
 		, '</div>'
 	].join('\n'));
 
 	// Setup date/time picker stuff
 	$('#gv-scheduler-input').datetimepicker({
 		defaultValue: new Date()
+	});
+	$('#gv-scheduler-input').keypress(function(event) {
+		if (event.which == 9) {	// Tab keycode
+			$('#gv-scheduler-button').focus();
+		}
 	});
 
 	// When calendar icon is clicked, focus on input field to fire picker
@@ -101,6 +105,22 @@ function setupScheduler()
 
 	// When a SMS message is scheduled
 	$('#gv-scheduler-button').click(scheduleMessage);
+	$('#gv-scheduler-button').focus(function() {
+		$('#gv-scheduler-button').addClass('goog-button-base-focused');
+	});
+	$('#gv-scheduler-button').focusout(function() {
+		$('#gv-scheduler-button').removeClass('goog-button-base-focused');
+	});
+	$('#gv-scheduler-button').hover(function() {
+		$('#gv-scheduler-button').addClass('goog-button-base-hover');
+	}, function() {
+		$('#gv-scheduler-button').removeClass('goog-button-base-hover');
+	});
+	$('#gv-scheduler-button').keypress(function(event) {
+		if (event.which == 13 || event.which == 32) {	// Enter & Spacebar keycodes
+			$('#gv-scheduler-button').click();
+		}
+	});
 }
 
 // Generates the HTML for a list item in the scheduled SMS message list
