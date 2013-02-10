@@ -240,12 +240,12 @@ function scheduleMessage()
 			$("#gv-scheduler-list li").fadeOut('normal');
 		}
 
-		// Add new message, use getTime() as unique id
+		// Add new message, use new Date().getTime() as unique id
 		messages.push({
 			recipients: recipients
 			, dateTime: JSON.stringify(convertDateToUTC(dateTime))
 			, text: text
-			, id: ID_PREFIX + dateTime.getTime()
+			, id: ID_PREFIX + new Date().getTime()
 		});
 
 		// Resort messages by date
