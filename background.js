@@ -68,7 +68,7 @@ function processGoogleDataResponse(response)
 chrome.extension.onMessage.addListener(
 	function(request, sender, sendResponse)
 	{
-		console.log(request, sender);
+		console.log("background:", request, sender);
 
 		if (request.action == "sendMessage")
 		{

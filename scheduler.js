@@ -64,10 +64,16 @@ function setupScheduledView()
 	$("#gv-scheduler-clear").click(clearScheduledMessages);
 
 	// Binding for immediate sending of scheduled messages
-	$("#gv-scheduler-list").on("click", ".gv-scheduler-send", sendScheduledMessage);
+	$("#gv-scheduler-list").on("click", ".gv-scheduler-send", function() {
+		var id = $(this).parents('li').attr('id');
+		sendScheduledMessage(id);
+	});
 
 	// Binding for removing of scheduled messages
-	$("#gv-scheduler-list").on("click", ".gv-scheduler-remove", removeScheduledMessage);
+	$("#gv-scheduler-list").on("click", ".gv-scheduler-remove", function() {
+		var id = $(this).parents('li').attr('id');
+		removeScheduledMessage(id);
+	});
 
 	// Initial load
 	reloadScheduledView();
@@ -280,9 +286,8 @@ function scheduleMessage()
 }
 
 // Send scheduled message
-function sendScheduledMessage()
+function sendScheduledMessage(id)
 {
-	var id = $(this).parents('li').attr('id');
 	console.log("sendScheduledMessage", id);
 
 	// Show confirmation popup just to make sure
@@ -305,9 +310,8 @@ function sendScheduledMessage()
 }
 
 // Removes message that was scheduled
-function removeScheduledMessage()
+function removeScheduledMessage(id)
 {
-	var id = $(this).parents('li').attr('id');
 	console.log("removeScheduledMessage", id);
 
 	// Show confirmation popup just to make sure
@@ -357,7 +361,7 @@ function clearScheduledMessages()
 chrome.extension.onMessage.addListener(
 	function(request, sender, sendResponse)
 	{
-		console.log(request, sender);
+		console.log("scheduler:", request, sender);
 
 		if (request.action == "messageSent")
 		{
