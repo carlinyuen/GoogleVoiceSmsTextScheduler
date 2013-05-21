@@ -247,12 +247,13 @@ function scheduleMessage()
 		}
 
 		// Add new message, use new Date().getTime() as unique id
-		messages.push({
+		var message = {
 			recipients: recipients
 			, dateTime: JSON.stringify(convertDateToUTC(dateTime))
 			, text: text
 			, id: ID_PREFIX + new Date().getTime()
-		});
+		};
+		messages.push(message);
 
 		// Resort messages by date
 		messages.sort(function(a, b) {
@@ -278,8 +279,7 @@ function scheduleMessage()
 					$("#gv-scheduler-input").val('');
 					$('.goog-bubble-close-button').click();
 					$("#gv-scheduler-list").append(
-						createScheduledListItemHTML(recipients, dateTime, text,
-							ID_PREFIX + dateTime.getTime()));
+						createScheduledListItemHTML(recipients, dateTime, text, message.id));
 				}
 			});
 	});
