@@ -3,6 +3,7 @@
 
 // Global Variables & Constants
 var OK = 0
+	, INTERVAL = 60000	// 60000 milliseconds = 1 minute
 	, ERROR_INVALID_INPUT = -1
 	, ERROR_NO_MESSAGES = -2
 	, ERROR_MISSING_MESSAGE = -3
@@ -11,6 +12,8 @@ var OK = 0
 var STORAGE_KEY = 'scheduledMessages';
 var GOOGLE_VOICE_DATA_REQUEST_URL = "https://www.google.com/voice/b/0/request/user/";
 var GOOGLE_VOICE_SEND_SMS_REQUEST_URL = "https://www.google.com/voice/b/0/sms/send/";
+
+var PAGE_ID = new Date().getTime();	// 'Unique' id for background page for locking
 var _rnr_se;	// Google Voice account key of some sort, needed for sms
 
 // Convert javscript date to and from UTC
@@ -31,6 +34,9 @@ function convertDateToLocal(date)
 // Initialize extension
 function initExtension()
 {
+	// Page ID
+	console.log("initExtension:", PAGE_ID);
+
 	// Retreive data from Google Voice's API calls
 	$.ajax({
 		type: 'GET',
@@ -50,12 +56,11 @@ function processGoogleDataResponse(response)
 		console.log("processGoogleDataResponse", _rnr_se);
 
 		// Check if we successfully retrieved the key
-		if (_rnr_se)
-		{
-			// 60000 milliseconds = 1 minute
-			setInterval(checkScheduledMessages, 60000);
+		if (_rnr_se) {
+			setInterval(checkScheduledMessages, INTERVAL);
 		} else {
 			console.log("Could not retrieve _rnr_se!");
+			setTimeout(initExtension, INTERVAL);
 		}
 	}
 	else	// Error, no data!
@@ -65,24 +70,28 @@ function processGoogleDataResponse(response)
 }
 
 // Handler to listen for messages from the content script
-chrome.extension.onMessage.addListener(
+chrome.runtime.onMessage.addListener(
 	function(request, sender, sendResponse)
 	{
-		console.log("background:", request, sender);
-
-		if (request.action == "sendMessage")
+		// Have to return true to send a response after listener returns
+		switch (request.action)
 		{
-			sendMessage(request.messageID, sendResponse);
-			return true;
-		}
+			case "sendMessage":
+				sendMessage(request.messageID, sendResponse);
+				return true;
 
-		if (request.action == "removeMessage")
-		{
-			removeMessage(request.messageID, sendResponse);
-			return true;
-		}
+			case "removeMessage":
+				removeMessage(request.messageID, sendResponse);
+				return true;
 
-		return false;
+			case "getAccountKey":
+				sendResponse(_rnr_se);
+				return true;
+
+			default:
+				console.log("Unknown request:", request, sender);
+				return false;
+		}
 	});
 
 // Send SMS message with given ID through google voice
@@ -254,31 +263,30 @@ function removeMessage(messageID, sendResponse)
 		if (messageFound)
 		{
 			// Store new data back in, and print error if any
-			chrome.storage.sync.set(
-				{"scheduledMessages": messages}
-				, function()
+			var data = {};
+			data[STORAGE_KEY] = messages;
+			chrome.storage.sync.set(data, function() {
+				if (chrome.runtime.lastError)
 				{
-					if (chrome.runtime.lastError)
-					{
-						console.log(chrome.runtime.lastError);
-						if (sendResponse) {		// If response function exists
-							sendResponse({
-								status: ERROR_STORAGE_ISSUE,
-								message: chrome.runtime.lastError
-							});
-						}
+					console.log(chrome.runtime.lastError);
+					if (sendResponse) {		// If response function exists
+						sendResponse({
+							status: ERROR_STORAGE_ISSUE,
+							message: chrome.runtime.lastError
+						});
 					}
-					else
-					{
-						console.log("removeMessage success:", messageID);
-						if (sendResponse) {		// If response function exists
-							sendResponse({
-								status: OK,
-								message: ""
-							});
-						}
+				}
+				else
+				{
+					console.log("removeMessage success:", messageID);
+					if (sendResponse) {		// If response function exists
+						sendResponse({
+							status: OK,
+							message: ""
+						});
 					}
-				});
+				}
+			});
 		}
 		else	// Error - couldn't find it!
 		{
@@ -303,21 +311,60 @@ function checkScheduledMessages()
 		if (!items || !items[STORAGE_KEY] || !items[STORAGE_KEY].length) {
 			return;
 		}
+//	*/
+		// Compare against the minute before
+		var currentDateTime = new Date();
+		var checkDateTime = new Date(currentDateTime.getTime() + 2 * INTERVAL);
+		var resetDateTime = new Date(currentDateTime.getTime() - 2 * INTERVAL);
 
 		// Loop through and check datetimes
-		var currentDateTime = new Date();
 		var messages = items[STORAGE_KEY];
-		for (var i = messages.length - 1; i >= 0; --i)
+		var messagesToSend = [];
+		for (var i = messages.length - 1, message = messages[i];
+				i >= 0; message = messages[--i])
 		{
-			var message = messages[i];
-			var messageDateTime = convertDateToLocal(
-				new Date($.parseJSON(message.dateTime)));
+			// Check if lock is ours
+			if (PAGE_ID == message.lock) {
+				messagesToSend.push(message.id);
+			}
+			else	// Not ours, see if we should lock it or reset it
+			{
+				// Compare times
+				var messageDateTime = convertDateToLocal(
+					new Date($.parseJSON(message.dateTime)));
 
-			// If message date is in the past, then send message
-			if (messageDateTime <= currentDateTime) {
-				sendMessage(message.id);
+				if (!message.lock)	// No lock, attempt to lock
+				{
+					// If message date is in range, set lock
+					if (messageDateTime <= checkDateTime) {
+						message.lock = PAGE_ID;
+					}
+				}
+				else	// Has lock, but maybe computer didn't serve it?
+				{
+					// If message > 2 mins old than intended send time,
+					//  reset lock and change message time to reflect
+					if (messageDateTime <= resetDateTime) {
+						message.lock = null;
+						message.dateTime = JSON.stringify(convertDateToUTC(checkDateTime))
+					}
+				}
 			}
 		}
+
+		// Sync back data and send messages that are locked for this page
+		var data = {};
+		data[STORAGE_KEY] = messages;
+		chrome.storage.sync.set(data, function() {
+			if (chrome.runtime.lastError) {
+				console.log(chrome.runtime.lastError);
+			} else {
+				$.each(messagesToSend, function(index, id) {
+					sendMessage(id);
+				});
+			}
+		});
+
 	});
 }
 
