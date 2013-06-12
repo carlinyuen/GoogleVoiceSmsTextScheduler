@@ -3,7 +3,7 @@
 
 // Global Variables & Constants
 var OK = 0
-	, INTERVAL = 60000	// 60000 milliseconds = 1 minute
+	, REFRESH_INTERVAL = 60000	// 60000 milliseconds = 1 minute
 	, ERROR_INVALID_INPUT = -1
 	, ERROR_NO_MESSAGES = -2
 	, ERROR_MISSING_MESSAGE = -3
@@ -57,15 +57,16 @@ function processGoogleDataResponse(response)
 
 		// Check if we successfully retrieved the key
 		if (_rnr_se) {
-			setInterval(checkScheduledMessages, INTERVAL);
+			setInterval(checkScheduledMessages, REFRESH_INTERVAL);
 		} else {
 			console.log("Could not retrieve _rnr_se!");
-			setTimeout(initExtension, INTERVAL);
+			setTimeout(initExtension, REFRESH_INTERVAL);
 		}
 	}
 	else	// Error, no data!
 	{
 		console.log(chrome.i18n.getMessage("ERROR_API_ISSUE"));
+		setTimeout(initExtension, REFRESH_INTERVAL);
 	}
 }
 
@@ -314,8 +315,8 @@ function checkScheduledMessages()
 //	*/
 		// Compare against the minute before
 		var currentDateTime = new Date();
-		var checkDateTime = new Date(currentDateTime.getTime() + 2 * INTERVAL);
-		var resetDateTime = new Date(currentDateTime.getTime() - 2 * INTERVAL);
+		var checkDateTime = new Date(currentDateTime.getTime() + 2 * REFRESH_INTERVAL);
+		var resetDateTime = new Date(currentDateTime.getTime() - 2 * REFRESH_INTERVAL);
 
 		// Loop through and check datetimes
 		var messages = items[STORAGE_KEY];

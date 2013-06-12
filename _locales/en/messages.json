@@ -74,6 +74,11 @@
 		, "description": "Error message when a process cannot make request to API calls."
 	}
 
+	, "ERROR_MISSING_KEY": {
+		"message": "Couldn't load account key! Will try again in a minute, or try reloading the extension."
+		, "description": "Userfacing message when account key could not be loaded."
+	}
+
 	, "TEMPLATE": {
 		"message": "Text"
 		, "description": "Template"

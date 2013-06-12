@@ -11,6 +11,7 @@ jQuery.noConflict();
 	var STORAGE_KEY = 'scheduledMessages';
 	var GV_RECIPIENT_LIMIT = 5;
 	var GV_TEXT_CHAR_LIMIT = 320;
+	var REFRESH_INTERVAL = 3000; //50000;	// 50 * 1000 = 50 seconds
 	var ID_PREFIX = "message_";
 
 	var calendarIconURL = chrome.runtime.getURL("images/calendar.png");
@@ -23,43 +24,50 @@ jQuery.noConflict();
 	// Document ready function
 	$(function()
 	{
+		// Add extra UI elements
+		addScheduledView();
+		addScheduler();
+
 		// Setup and load scheduled texts
 		setupScheduledView();
 
 		// Setup scheduler UI elements
 		setupScheduler();
 
-		// Test access to GVoice account key
-		testAccount(function(key)
-		{
-			if (!key)
-			{
-				// Fade and disble links
-				$('#gv-scheduler-container, #gv-scheduler')
-					.fadeTo('fast', 0.5)
-					.find('a').css('cursor', 'default')
-						.off('click.gv-scheduler')
-						.on('click.gv-scheduler', function(event) {
-							event.preventDefault();
-						});
-
-				// Disable scheduler
-				$('#gv-scheduler').find('input').prop('disabled', true);
-				$('#gv-scheduler-button').css('cursor', 'default')
-					.off('click.gv-scheduler')
-					.on('click.gv-scheduler', function(event) {
-						event.preventDefault();
-					});
-
-				// Display warning message
-				$('#gv-scheduler-container').find('h3')
-					.append($(document.createElement('p'))
-						.attr('id', 'gv-scheduler-warning')
-						.text('Could not load your Google Voice account key! Please try reloading the extension.')
-					);
-			}
-		});
+		// Test account access on an interval
+		setInterval(testAccountAccess, REFRESH_INTERVAL);
 	});
+
+	// Test access to GVoice account key
+	function testAccountAccess() {
+		getAccountKey(validateAccountAccess);
+	}
+
+	// Check for account key
+	function validateAccountAccess(key)
+	{
+		// Fade/show and dis/enable links
+		$('#gv-scheduler-content').fadeTo('fast', (key) ? 1 : 0.5);
+
+		if (!key)
+		{
+			console.log("Could not get account key!");
+
+			// Display warning message if DNE
+			if ($('.gv-scheduler-warning').length == 0) {
+				displayCrouton(chrome.i18n.getMessage("ERROR_MISSING_KEY"), 'gv-scheduler-warning error');
+			}
+		}
+		else	// Key found, setup handlers!
+		{
+			console.log("Retrieved account key!");
+
+			// Clean up any warnings
+			$('.gv-scheduler-warning').slideUp('fast', function() {
+				$(this).remove();
+			});
+		}
+	}
 
 	// Convert javscript date to and from UTC
 	function convertDateToUTC(date)
@@ -78,24 +86,30 @@ jQuery.noConflict();
 	}
 
 	// Add new UI elements to hold scheduled messages
-	function setupScheduledView()
+	function addScheduledView()
 	{
 		$("#gc-view-main").prepend([
 			'<div id="gv-scheduler-container">'
-			, '	<h3>Scheduled SMS Messages'
-			, '		<span>'
-			, '			<a id="gv-scheduler-reload" href="#" title="Reload Scheduled SMS Messages">'
-			, '				<img src="' + reloadIconURL + '" alt="Reload" /></a>'
-			, '			<a id="gv-scheduler-clear" href="#" title="Clear all Scheduled SMS Messages">'
-			, '				<img src="' + removeIconURL + '" alt="Clear" /></a>'
-			, '			<a id="gv-scheduler-feedback" href="https://chrome.google.com/webstore/detail/sms-text-message-schedule/podfahadlppahcknimehicajmjdcfieb/reviews" target="_blank" title="Feedback on Chrome Webstore">Feedback</a>'
-			, '		</span>'
-			, '	</h3>'
-			, '	<ul id="gv-scheduler-list">'
-			, '	</ul>'
+			, '	<div id="gv-scheduler-content">'
+			, '		<h3>Scheduled SMS Messages'
+			, '			<span>'
+			, '				<a id="gv-scheduler-reload" href="#" title="Reload Scheduled SMS Messages">'
+			, '					<img src="' + reloadIconURL + '" alt="Reload" /></a>'
+			, '				<a id="gv-scheduler-clear" href="#" title="Clear all Scheduled SMS Messages">'
+			, '					<img src="' + removeIconURL + '" alt="Clear" /></a>'
+			, '				<a id="gv-scheduler-feedback" href="https://chrome.google.com/webstore/detail/sms-text-message-schedule/podfahadlppahcknimehicajmjdcfieb/reviews" target="_blank" title="Feedback on Chrome Webstore">Feedback</a>'
+			, '			</span>'
+			, '		</h3>'
+			, '		<ul id="gv-scheduler-list">'
+			, '		</ul>'
+			, '	</div>'
 			, '</div>'
 		].join('\n'));
+	}
 
+	// Bind scheduledView handlers
+	function setupScheduledView()
+	{
 		// Reload icon
 		$("#gv-scheduler-reload").on('click.gv-scheduler', reloadScheduledView);
 
@@ -119,7 +133,7 @@ jQuery.noConflict();
 	}
 
 	// Adding edits to Text message popup to allow scheduling
-	function setupScheduler()
+	function addScheduler()
 	{
 		// Add button and form elements
 		$("#gc-quicksms2").append([
@@ -132,7 +146,11 @@ jQuery.noConflict();
 			, '	<div id="gv-scheduler-button" class="goog-inline-block gc-quicksms-send goog-button goog-button-base" role="button" style="" tabindex="0"><div class="goog-inline-block goog-button-base-outer-box" style=""><div class="goog-inline-block goog-button-base-inner-box" style=""><div class="goog-button-base-pos" style=""><div class="goog-button-base-top-shadow" style="">&nbsp;</div><div class="goog-button-base-content" style="">Schedule</div></div></div></div></div>'
 			, '</div>'
 		].join('\n'));
+	}
 
+	// Binding event handlers for scheduler
+	function setupScheduler()
+	{
 		// Setup date/time picker stuff
 		$('#gv-scheduler-input').datetimepicker({
 			defaultValue: new Date()
@@ -169,7 +187,7 @@ jQuery.noConflict();
 	}
 
 	// Test for GVoice account key
-	function testAccount(callback)
+	function getAccountKey(callback)
 	{
 		chrome.runtime.sendMessage({
 			action: "getAccountKey"
@@ -246,13 +264,6 @@ jQuery.noConflict();
 	// Schedule a message
 	function scheduleMessage()
 	{
-		// Test for account key to make sure we can do it
-		testAccount(function(key) {
-			if (!key) {
-				alert("We couldn't load your Google Voice account key! Please try reloading the extension.");
-			}
-		});
-
 		var dateTime = $("#gv-scheduler-input").datetimepicker('getDate');
 		var recipients = $("#gc-quicksms-number").val();
 		var text = $("#gc-quicksms-text2").val();
@@ -287,6 +298,9 @@ jQuery.noConflict();
 			alert(errors.join('\n'));
 			return;
 		}
+
+		// Test for account key to make sure we can do it
+		getAccountKey(validateAccountAccess);
 
 		// Schedule message now
 		chrome.storage.sync.get(STORAGE_KEY, function(items)
@@ -346,24 +360,26 @@ jQuery.noConflict();
 	{
 		console.log("sendScheduledMessage", id);
 
-		// Test for account key to make sure we can do it
-		testAccount(function(key) {
-			if (!key) {
-				alert("We couldn't load your Google Voice account key! Please try reloading the extension.");
-			}
-		});
-
 		// Show confirmation popup just to make sure
 		var confirmed = confirm(chrome.i18n.getMessage("WARNING_CONFIRM_SEND"));
 		if (!confirmed) {
 			return;
 		}
 
-		// Send message to background process to send
-		chrome.runtime.sendMessage({
-			action: "sendMessage",
-			messageID: id
+		// Test for account key to make sure we can do it
+		getAccountKey(function(key)
+		{
+			validateAccountAccess(key);
+
+			if (key) {
+				// Send message to background process to send
+				chrome.runtime.sendMessage({
+					action: "sendMessage",
+					messageID: id
+				});
+			}
 		});
+
 	}
 
 	// Removes message that was scheduled
@@ -409,6 +425,30 @@ jQuery.noConflict();
 		});
 	}
 
+	// Display crouton message
+	function displayCrouton(message, extraClass, temporary)
+	{
+		$(document.createElement('div'))
+			.addClass('gv-scheduler-crouton')
+			.addClass((extraClass) ? extraClass : '')
+			.text(message)
+			.append($(document.createElement('span'))
+				.addClass('gv-scheduler-crouton-close')
+				.attr('title', 'Remove Notification')
+				.text('x')
+				.click(function() {
+					$(this).parent('div.gv-scheduler-crouton')
+						.slideUp('fast', function() {
+							$(this).remove();
+						});
+				})
+			)
+			.prependTo('#gv-scheduler-container')
+			.slideUp(0, function() {
+				$(this).slideDown('fast');
+			});
+	}
+
 	// Handler for messages from the background page indicating
 	//  when a scheduled message is sent
 	chrome.runtime.onMessage.addListener(
@@ -428,4 +468,6 @@ jQuery.noConflict();
 					return false;
 			}
 		});
+
+
 })(jQuery);
