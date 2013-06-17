@@ -224,7 +224,7 @@ jQuery.noConflict();
 		$("#gv-scheduler-list").html("");
 
 		// Get scheduled messages
-		chrome.storage.sync.get(STORAGE_KEY, function(items)
+		chrome.storage.local.get(STORAGE_KEY, function(items)
 		{
 			// Check if nothing returned
 			if (!items || !items[STORAGE_KEY] || !items[STORAGE_KEY].length)
@@ -303,7 +303,7 @@ jQuery.noConflict();
 		getAccountKey(validateAccountAccess);
 
 		// Schedule message now
-		chrome.storage.sync.get(STORAGE_KEY, function(items)
+		chrome.storage.local.get(STORAGE_KEY, function(items)
 		{
 			// If something returned, use that instead
 			var messages = [];
@@ -333,7 +333,7 @@ jQuery.noConflict();
 			});
 
 			// Reset data into storage
-			chrome.storage.sync.set(
+			chrome.storage.local.set(
 				{"scheduledMessages": messages}
 				, function()
 				{
@@ -417,7 +417,7 @@ jQuery.noConflict();
 			return;
 		}
 
-		chrome.storage.sync.remove("scheduledMessages", function()
+		chrome.storage.local.remove("scheduledMessages", function()
 		{
 			$('#gv-scheduler-list').fadeOut('normal').html('')
 				.append('<li><strong>No scheduled messages!</strong></li>')

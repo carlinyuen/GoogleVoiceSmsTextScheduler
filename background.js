@@ -101,7 +101,7 @@ function sendMessage(messageID, sendResponse)
 	console.log("sendMessage", messageID);
 
 	// Go through messages and remove sent message
-	chrome.storage.sync.get(STORAGE_KEY, function(items)
+	chrome.storage.local.get(STORAGE_KEY, function(items)
 	{
 		// Check if no messages
 		if (!items || !items[STORAGE_KEY] || !items[STORAGE_KEY].length)
@@ -231,7 +231,7 @@ function removeMessage(messageID, sendResponse)
 	console.log("removeMessage", messageID);
 
 	// Go through messages and remove sent message
-	chrome.storage.sync.get(STORAGE_KEY, function(items)
+	chrome.storage.local.get(STORAGE_KEY, function(items)
 	{
 		// Check if no messages
 		if (!items || !items[STORAGE_KEY] || !items[STORAGE_KEY].length)
@@ -266,7 +266,7 @@ function removeMessage(messageID, sendResponse)
 			// Store new data back in, and print error if any
 			var data = {};
 			data[STORAGE_KEY] = messages;
-			chrome.storage.sync.set(data, function() {
+			chrome.storage.local.set(data, function() {
 				if (chrome.runtime.lastError)
 				{
 					console.log(chrome.runtime.lastError);
@@ -306,13 +306,13 @@ function checkScheduledMessages()
 {
 	// Get list of scheduled messages and see if
 	//	any of them should be sent out
-	chrome.storage.sync.get(STORAGE_KEY, function(items)
+	chrome.storage.local.get(STORAGE_KEY, function(items)
 	{
 		// Check if no messages
 		if (!items || !items[STORAGE_KEY] || !items[STORAGE_KEY].length) {
 			return;
 		}
-//	*/
+
 		// Compare against the minute before
 		var currentDateTime = new Date();
 		var checkDateTime = new Date(currentDateTime.getTime() + 2 * REFRESH_INTERVAL);
@@ -356,7 +356,7 @@ function checkScheduledMessages()
 		// Sync back data and send messages that are locked for this page
 		var data = {};
 		data[STORAGE_KEY] = messages;
-		chrome.storage.sync.set(data, function() {
+		chrome.storage.local.set(data, function() {
 			if (chrome.runtime.lastError) {
 				console.log(chrome.runtime.lastError);
 			} else {
