@@ -1,4 +1,3 @@
-
 // Prevent conflicts
 jQuery.noConflict();
 
@@ -11,8 +10,10 @@ jQuery.noConflict();
 	var STORAGE_KEY = 'scheduledMessages';
 	var GV_RECIPIENT_LIMIT = 5;
 	var GV_TEXT_CHAR_LIMIT = 320;
-	var REFRESH_INTERVAL = 3000; //50000;	// 50 * 1000 = 50 seconds
 	var ID_PREFIX = "message_";
+	var REFRESH_INTERVAL = 3000;			// 3 seconds
+	var LONG_REFRESH_INTERVAL = 1800000;	// 30 mins
+	var refreshHandle;
 
 	var calendarIconURL = chrome.runtime.getURL("images/calendar.png");
 	var reloadIconURL	= chrome.runtime.getURL("images/reload.png");
@@ -35,7 +36,7 @@ jQuery.noConflict();
 		setupScheduler();
 
 		// Test account access on an interval
-		setInterval(testAccountAccess, REFRESH_INTERVAL);
+		refreshHandle = setInterval(testAccountAccess, REFRESH_INTERVAL);
 	});
 
 	// Test access to GVoice account key
@@ -57,6 +58,10 @@ jQuery.noConflict();
 			if ($('.gv-scheduler-warning').length == 0) {
 				displayCrouton(chrome.i18n.getMessage("ERROR_MISSING_KEY"), 'gv-scheduler-warning error');
 			}
+
+			// Use short refresh interval again
+			clearInterval(refreshHandle);
+			refreshHandle = setInterval(testAccountAccess, REFRESH_INTERVAL);
 		}
 		else	// Key found, setup handlers!
 		{
@@ -66,6 +71,10 @@ jQuery.noConflict();
 			$('.gv-scheduler-warning').slideUp('fast', function() {
 				$(this).remove();
 			});
+
+			// Use long interval
+			clearInterval(refreshHandle);
+			refreshHandle = setInterval(testAccountAccess, LONG_REFRESH_INTERVAL);
 		}
 	}
 

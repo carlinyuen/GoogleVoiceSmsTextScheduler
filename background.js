@@ -3,7 +3,7 @@
 
 // Global Variables & Constants
 var OK = 0
-	, REFRESH_INTERVAL = 60000	// 60000 milliseconds = 1 minute
+	, REFRESH_INTERVAL = 60000			// 60000 ms = 1 minute
 	, ERROR_INVALID_INPUT = -1
 	, ERROR_NO_MESSAGES = -2
 	, ERROR_MISSING_MESSAGE = -3
@@ -168,7 +168,7 @@ function processSendSMSResponse(message, response, sendResponse)
 		if (data.ok)
 		{
 			// Tell tabs to remove message from UI
-			chrome.tabs.query({url:"*://www.google.com/voice/*"}, function(tabs)
+			chrome.tabs.query({url:"*://www.google.com/voice*"}, function(tabs)
 			{
 				for (var i = tabs.length - 1; i >= 0; --i)
 				{
@@ -180,11 +180,9 @@ function processSendSMSResponse(message, response, sendResponse)
 			});
 
 			// Test for notification support, and show notification
-			if (window.webkitNotifications) {
-				showNotification("images/icon48.png"
-					, "SMS Message sent to " + message.recipients
-					, message.text);
-			}
+			showNotification("images/icon48.png"
+				, "SMS Message sent to " + message.recipients
+				, message.text);
 
 			// Go through messages and remove sent message
 			removeMessage(message.id, sendResponse);
@@ -217,12 +215,15 @@ function showNotification(imagePath, title, message)
 	var time = /(..)(:..)/.exec(new Date());     // The prettyprinted time.
 	var hour = time[1] % 12 || 12;               // The prettyprinted hour.
 	var period = time[1] < 12 ? 'a.m.' : 'p.m.'; // The period of the day.
-	var notification = window.webkitNotifications.createNotification(
-		imagePath											// The image.
-		, title + " at " + hour + time[2] + ' ' + period	// The title.
-		, message											// The body.
-	);
-	notification.show();
+
+	var data = {
+		type: "basic"
+		, iconUrl: imagePath	// The image.
+		, title: title + " at " + hour + time[2] + ' ' + period		// The title.
+		, message: message		// The body.
+//		, contextMessage: "at " + hour + time[2] + ' ' + period	// Doesn't work
+	};
+	chrome.notifications.create("", data, function(id) {});
 }
 
 // Remove a message with given ID, and return response through sendResponse
