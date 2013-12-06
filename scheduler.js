@@ -4,6 +4,22 @@ jQuery.noConflict();
 // Encapsulated anonymous function
 (function($)
 {
+	// Adjustments to jQuery functions
+	$.fn.animateRotate = function(startAngle, endAngle, duration, easing, complete){
+		return this.each(function(){
+			var elem = $(this);
+			$({deg: startAngle}).animate({deg: endAngle}, {
+				duration: duration,
+				easing: easing,
+				step: function(now){
+					elem.css({
+					  'transform':'rotate('+now+'deg)'
+					});
+				},
+				complete: complete || $.noop
+			});
+		});
+	};
 
 	// Global Variables & Constants
 	var OK = 0;
@@ -11,6 +27,7 @@ jQuery.noConflict();
 	var GV_RECIPIENT_LIMIT = 5;
 	var GV_TEXT_CHAR_LIMIT = 320;
 	var ID_PREFIX = "message_";
+	var EVENT_CLICK = 'click.gv-scheduler';
 	var REFRESH_INTERVAL = 3000;			// 3 seconds
 	var LONG_REFRESH_INTERVAL = 1800000;	// 30 mins
 	var refreshHandle;
@@ -18,6 +35,7 @@ jQuery.noConflict();
 	var calendarIconURL = chrome.runtime.getURL("images/calendar.png");
 	var reloadIconURL	= chrome.runtime.getURL("images/reload.png");
 	var refreshIconURL	= chrome.runtime.getURL("images/refresh.gif");
+	var collapseIconURL	= chrome.runtime.getURL("images/collapse.png");
 	var loadingIconURL	= chrome.runtime.getURL("images/loading.gif");
 	var removeIconURL	= chrome.runtime.getURL("images/remove.png");
 	var sendIconURL		= chrome.runtime.getURL("images/send.png");
@@ -97,17 +115,22 @@ jQuery.noConflict();
 	// Add new UI elements to hold scheduled messages
 	function addScheduledView()
 	{
+		// Remove any old instance
+		$('#gv-scheduler-container').remove();
+
+		// Add new one
 		$("#gc-view-main").prepend([
 			'<div id="gv-scheduler-container">'
 			, '	<div id="gv-scheduler-content">'
-			, '		<h3>Scheduled SMS Messages'
-			, '			<span>'
-			, '				<a id="gv-scheduler-reload" href="#" title="Reload Scheduled SMS Messages">'
-			, '					<img src="' + reloadIconURL + '" alt="Reload" /></a>'
-			, '				<a id="gv-scheduler-clear" href="#" title="Clear all Scheduled SMS Messages">'
-			, '					<img src="' + removeIconURL + '" alt="Clear" /></a>'
-			, '				<a id="gv-scheduler-feedback" href="https://chrome.google.com/webstore/detail/sms-text-message-schedule/podfahadlppahcknimehicajmjdcfieb/reviews" target="_blank" title="Feedback on Chrome Webstore">Feedback</a>'
-			, '			</span>'
+			, '		<h3>'
+			, '			<a id="gv-scheduler-collapse" title="Collapse Scheduled SMS Messages View" href="#">'
+			, '				<img src="' + collapseIconURL + '" alt="Collapse" /></a>'
+			, '			<span>Scheduled SMS Messages</span>'
+			, '			<button id="gv-scheduler-reload" title="Reload Scheduled SMS Messages">'
+			, '				<img src="' + reloadIconURL + '" alt="Reload" /></button>'
+			, '			<button id="gv-scheduler-clear" title="Clear all Scheduled SMS Messages">'
+			, '				<img src="' + removeIconURL + '" alt="Clear" /></button>'
+			, '			<a id="gv-scheduler-feedback" href="https://chrome.google.com/webstore/detail/sms-text-message-schedule/podfahadlppahcknimehicajmjdcfieb/reviews" target="_blank" title="Feedback on Chrome Webstore">Feedback</a>'
 			, '		</h3>'
 			, '		<ul id="gv-scheduler-list">'
 			, '		</ul>'
@@ -119,20 +142,23 @@ jQuery.noConflict();
 	// Bind scheduledView handlers
 	function setupScheduledView()
 	{
+		// Collapse icon
+		$("#gv-scheduler-collapse").on(EVENT_CLICK, collapseScheduledView);
+
 		// Reload icon
-		$("#gv-scheduler-reload").on('click.gv-scheduler', reloadScheduledView);
+		$("#gv-scheduler-reload").on(EVENT_CLICK, reloadScheduledView);
 
 		// Clear icon
-		$("#gv-scheduler-clear").on('click.gv-scheduler', clearScheduledMessages);
+		$("#gv-scheduler-clear").on(EVENT_CLICK, clearScheduledMessages);
 
 		// Binding for immediate sending of scheduled messages
-		$("#gv-scheduler-list").on("click.gv-scheduler", ".gv-scheduler-send", function() {
+		$("#gv-scheduler-list").on(EVENT_CLICK, ".gv-scheduler-send", function() {
 			var id = $(this).parents('li').attr('id');
 			sendScheduledMessage(id);
 		});
 
 		// Binding for removing of scheduled messages
-		$("#gv-scheduler-list").on("click.gv-scheduler", ".gv-scheduler-remove", function() {
+		$("#gv-scheduler-list").on(EVENT_CLICK, ".gv-scheduler-remove", function() {
 			var id = $(this).parents('li').attr('id');
 			removeScheduledMessage(id);
 		});
@@ -144,6 +170,9 @@ jQuery.noConflict();
 	// Adding edits to Text message popup to allow scheduling
 	function addScheduler()
 	{
+		// Remove old elements if exists
+		$('#gv-scheduler').remove();
+
 		// Add button and form elements
 		$("#gc-quicksms2").append([
 			'<div id="gv-scheduler">'
@@ -171,12 +200,12 @@ jQuery.noConflict();
 		});
 
 		// When calendar icon is clicked, focus on input field to fire picker
-		$('#gv-scheduler-calendar').on('click.gv-scheduler', function() {
+		$('#gv-scheduler-calendar').on('EVENT_CLICK', function() {
 			$('#gv-scheduler-input').focus();
 		});
 
 		// When a SMS message is scheduled
-		$('#gv-scheduler-button').on('click.gv-scheduler', scheduleMessage);
+		$('#gv-scheduler-button').on('EVENT_CLICK', scheduleMessage);
 		$('#gv-scheduler-button').focus(function() {
 			$('#gv-scheduler-button').addClass('goog-button-base-focused');
 		});
@@ -220,6 +249,18 @@ jQuery.noConflict();
 					, '	<br />'].join('\n'))
 				.append($('<span>').addClass('gv-scheduler-dateTime').text(dateTime))
 			).append($('<p>').text(text));
+	}
+
+	// Collapse scheduled message view
+	function collapseScheduledView()
+	{
+		var $view = $('#gv-scheduler-content');
+		$view.toggleClass('collapsed');
+		if ($view.hasClass('collapsed')) {
+			$('#gv-scheduler-list').slideUp('fast');
+		} else {
+			$('#gv-scheduler-list').slideDown('fast');
+		}
 	}
 
 	// Load scheduled messages and display them

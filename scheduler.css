@@ -1,3 +1,13 @@
+button
+{
+	cursor: pointer;
+	padding: 1px 2px;
+	margin: 0;
+}
+button img {
+	vertical-align: bottom;
+}
+
 #gv-scheduler-container
 {
 	width: 100%;
@@ -15,29 +25,53 @@
 #gv-scheduler-content h3
 {
 	color: #888;
-	vertical-align: top;
-	margin-left: 16px;
-}
-
-#gv-scheduler-reload {
 	vertical-align: middle;
+	padding-bottom: 8px;
+	margin-bottom: 16px;
+	border-bottom: 1px solid #ddd;
+}
+#gv-scheduler-content.collapsed h3 {
+	border: none;
+	padding-bottom: 0;
 }
 
-#gv-scheduler-feedback {
+#gv-scheduler-collapse {
+	opacity: 0.66;
+}
+#gv-scheduler-collapse:hover {
+	opacity: 1.0;
+}
+#gv-scheduler-collapse img
+{
+	vertical-align: middle;
+	-webkit-transition: all 400ms;
+}
+.collapsed #gv-scheduler-collapse img {
+	-webkit-transform: rotate(180deg);
+}
+
+#gv-scheduler-feedback
+{
 	vertical-align: top;
 	font: normal 9pt/12pt Verdana;
+	float: right;
+}
+
+#gv-scheduler-list
+{
+	padding-bottom: 0;
 }
 
 #gv-scheduler-list li
 {
 	position: relative;
-	padding-top: 24px;
-	border-top: 1px solid #ddd;
-	margin-left: 16px;
+	padding: 0 16px 0 0;
+	margin-left: 8px;
 }
 
 #gv-scheduler-list li h4 {
 	vertical-align: middle;
+	padding: 0;
 }
 #gv-scheduler-list li h4:before {
 	content:"To: ";
@@ -56,12 +90,10 @@
 {
 	vertical-align: middle;
 	opacity: 0.5;
-	filter: alpha(opacity=50);
 }
 .gv-scheduler-remove:hover
 {
 	opacity: 1.0;
-	filter: alpha(opacity=100);
 }
 
 .gv-scheduler-crouton
@@ -99,17 +131,12 @@
 	margin: auto 0;
 	vertical-align: middle;
 
-	-webkit-border-radius: 8pt;
-	-moz-border-radius: 8pt;
 	border-radius: 8pt;
-
 	opacity: 0.5;
-	filter: alpha(opacity=50);
 }
 .gv-scheduler-crouton-close:hover
 {
 	opacity: 1;
-	filter: alpha(opacity=100);
 }
 
 
