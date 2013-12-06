@@ -123,8 +123,8 @@ jQuery.noConflict();
 			'<div id="gv-scheduler-container">'
 			, '	<div id="gv-scheduler-content">'
 			, '		<h3>'
-			, '			<a id="gv-scheduler-collapse" title="Collapse Scheduled SMS Messages View" href="#">'
-			, '				<img src="' + collapseIconURL + '" alt="Collapse" /></a>'
+			, '			<a id="gv-scheduler-collapse" title="Show/Hide Scheduled SMS Messages View" href="#">'
+			, '				<img src="' + collapseIconURL + '" alt="^" /></a>'
 			, '			<span>Scheduled SMS Messages</span>'
 			, '			<button id="gv-scheduler-reload" title="Reload Scheduled SMS Messages">'
 			, '				<img src="' + reloadIconURL + '" alt="Reload" /></button>'
@@ -142,7 +142,7 @@ jQuery.noConflict();
 	// Bind scheduledView handlers
 	function setupScheduledView()
 	{
-		// Collapse icon
+		// Collapse icon, also collapse if previously set that way
 		$("#gv-scheduler-collapse").on(EVENT_CLICK, collapseScheduledView);
 
 		// Reload icon
@@ -251,9 +251,10 @@ jQuery.noConflict();
 			).append($('<p>').text(text));
 	}
 
-	// Collapse scheduled message view
-	function collapseScheduledView()
+	// Collapse/Expand scheduled message view
+	function toggleScheduledView()
 	{
+		// Animate arrow and show/hide view accordingly
 		var $view = $('#gv-scheduler-content');
 		$view.toggleClass('collapsed');
 		if ($view.hasClass('collapsed')) {

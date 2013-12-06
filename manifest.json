@@ -46,6 +46,7 @@
 		"background"
 		, "notifications"
 		, "storage"
+		, "unlimitedStorage"
 		, "tabs"
 		, "*://voice.google.com/"
 		, "*://www.google.com/voice/*"
