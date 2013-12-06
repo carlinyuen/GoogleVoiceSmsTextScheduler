@@ -24,6 +24,8 @@ jQuery.noConflict();
 	// Global Variables & Constants
 	var OK = 0;
 	var STORAGE_KEY = 'scheduledMessages';
+	var SETTINGS_KEY = 'userSettings';
+	var COLLAPSE_SETTINGS_KEY = 'viewCollapsed';
 	var GV_RECIPIENT_LIMIT = 5;
 	var GV_TEXT_CHAR_LIMIT = 320;
 	var ID_PREFIX = "message_";
@@ -144,6 +146,11 @@ jQuery.noConflict();
 	{
 		// Collapse icon, also collapse if previously set that way
 		$("#gv-scheduler-collapse").on(EVENT_CLICK, collapseScheduledView);
+		chrome.storage.local.get(SETTINGS_KEY, function(data) {
+			if (data && data[SETTINGS_KEY] && data[SETTINGS_KEY][COLLAPSE_SETTINGS_KEY]) {
+				toggleScheduledView();
+			}
+		});
 
 		// Reload icon
 		$("#gv-scheduler-reload").on(EVENT_CLICK, reloadScheduledView);
@@ -254,14 +261,29 @@ jQuery.noConflict();
 	// Collapse/Expand scheduled message view
 	function toggleScheduledView()
 	{
-		// Animate arrow and show/hide view accordingly
+		// Toggle collapsed class to animate arrow
 		var $view = $('#gv-scheduler-content');
 		$view.toggleClass('collapsed');
-		if ($view.hasClass('collapsed')) {
+
+		// Show/hide view accordingly
+		var collapsed = $view.hasClass('collapsed');
+		if (collapsed) {
 			$('#gv-scheduler-list').slideUp('fast');
 		} else {
 			$('#gv-scheduler-list').slideDown('fast');
 		}
+
+		// Save into local storage setting
+		chrome.storage.local.get(SETTINGS_KEY, function(data)
+		{
+			if (!data || !data[SETTINGS_KEY]) {
+				data = {};
+				data[SETTINGS_KEY] = {};
+			}
+
+			data[SETTINGS_KEY][COLLAPSE_SETTINGS_KEY] = collapsed;
+			chrome.storage.local.set(data);
+		});
 	}
 
 	// Load scheduled messages and display them
