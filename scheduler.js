@@ -295,7 +295,7 @@ jQuery.noConflict();
 		});
 
 		// If no messages, show no messages notice
-		if (numMessages === 0) {
+		if (numMessages == 0) {
 			$('#gv-scheduler-list').fadeOut('normal').html('')
 				.append('<li><strong>'
 					+ chrome.i18n.getMessage("STATUS_NO_MESSAGES") + '</strong></li>')
@@ -534,14 +534,11 @@ jQuery.noConflict();
 	function clearScheduledMessages()
 	{
 		// Show confirmation popup just to make sure
-		var confirmed = confirm(chrome.i18n.getMessage("WARNING_CONFIRM_CLEAR"));
-		if (!confirmed) {
-			return;
+		if (confirm(chrome.i18n.getMessage("WARNING_CONFIRM_CLEAR"))) {
+			chrome.storage.local.remove("scheduledMessages", function() {
+				updateMessageCount();	// Update message count
+			});
 		}
-
-		chrome.storage.local.remove("scheduledMessages", function() {
-			updateMessageCount();	// Update message count
-		});
 	}
 
 	// Display crouton message
