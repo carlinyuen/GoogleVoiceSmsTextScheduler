@@ -288,6 +288,7 @@ jQuery.noConflict();
 	function updateMessageCount()
 	{
 		var numMessages = $('li.gv-scheduler-message').length;
+		console.log(numMessages, "messages scheduled");
 
 		// Fade in and out message count for update
 		$('#gv-scheduler-message-count').fadeOut('fast', function() {
@@ -296,10 +297,12 @@ jQuery.noConflict();
 
 		// If no messages, show no messages notice
 		if (numMessages == 0) {
-			$('#gv-scheduler-list').fadeOut('normal').html('')
-				.append('<li><strong>'
-					+ chrome.i18n.getMessage("STATUS_NO_MESSAGES") + '</strong></li>')
-				.fadeIn('normal');
+			$('#gv-scheduler-list').fadeOut('normal', function() {
+				$(this).html('')
+					.append('<li><strong>'
+						+ chrome.i18n.getMessage("STATUS_NO_MESSAGES") + '</strong></li>')
+					.fadeIn('normal');
+			});
 		}
 	}
 
@@ -425,9 +428,11 @@ jQuery.noConflict();
 					messages = items[STORAGE_KEY];
 				}
 
-				// If no messages before, clear list
+				// If no messages before, clear no messages item
 				if (!messages.length) {
-					$("#gv-scheduler-list li").fadeOut('normal');
+					$("#gv-scheduler-list li").fadeOut('normal', function() {
+						$(this).remove();
+					});
 				}
 
 				// Add new message, use new Date().getTime() as unique id
@@ -536,7 +541,14 @@ jQuery.noConflict();
 		// Show confirmation popup just to make sure
 		if (confirm(chrome.i18n.getMessage("WARNING_CONFIRM_CLEAR"))) {
 			chrome.storage.local.remove("scheduledMessages", function() {
-				updateMessageCount();	// Update message count
+				$('#gv-scheduler-list').fadeOut('normal', function()
+				{
+					// Clear all items
+					$(this).html('');
+
+					// Update message count
+					updateMessageCount();
+				});
 			});
 		}
 	}
