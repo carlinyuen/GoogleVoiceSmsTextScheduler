@@ -2,6 +2,7 @@
 //	and see if we need to send out scheduled texts
 
 // Global Variables & Constants
+var manifest = chrome.runtime.getManifest();	// Manifest reference
 var OK = 0
 	, REFRESH_INTERVAL = 60000			// 60000 ms = 1 minute
 	, ERROR_INVALID_INPUT = -1
@@ -30,6 +31,75 @@ function convertDateToLocal(date)
 			second: date.getSeconds(), millisecond: date.getMilliseconds()
 		}) + " UTC");
 }
+
+// Execute our content script into the given tab
+var contentScripts = manifest.content_scripts[0].js;
+function injectScript(tab)
+{
+	// Insanity check
+	if (!tab || !tab.id) {
+		console.log("Injecting into invalid tab:", tab);
+		return;
+	}
+
+	// Loop through content scripts and execute in order
+    for (var i = 0, l = contentScripts.length; i < l; ++i) {
+        chrome.tabs.executeScript(tab.id, {
+            file: contentScripts[i]
+        });
+    }
+}
+
+// Listen to when extension is first installed or upgraded
+chrome.runtime.onInstalled.addListener(function(details)
+{
+	console.log("onInstalled: " + details.reason);
+
+	// On first install, go through and inject content script into GVoice tabs
+	if (details.reason == "install" || details.reason == "update")
+	{
+		// Execute our content script into the given tab
+		var contentScripts = manifest.content_scripts[0].js;
+		chrome.tabs.query({url:"*://www.google.com/voice*"}, function(tabs) {
+			if (tabs.length) {
+				for (var i = tabs.length - 1; i >= 0; --i) {
+					// Loop through content scripts and execute in order
+					for (var s = 0, l = contentScripts.length; s < l; ++s) {
+						chrome.tabs.executeScript(tabs[i].id, {
+							file: contentScripts[s]
+						});
+					}
+				}
+			}
+			else if (details.reason == "install") {
+				// No google voice page open on first install! Open for them.
+				chrome.tabs.create({url: "https://voice.google.com"});
+			}
+		});
+	}
+
+	// If upgrade and new version number, notify user with notification
+	if (details.reason == "update" && details.previousVersion != manifest.version)
+	{
+		// Notify user
+		chrome.notifications.create("", {
+			type: "basic"
+			, iconUrl: "images/icon128.png"
+			, title: "GoogleVoice Scheduler Updated!"
+			, message: "Hi there! Please refresh your tabs to use it. Happy scheduling! :o)"
+		}, function(id) {});
+
+		// Loop through GVoice tabs and tell them to refresh
+		chrome.tabs.query({url:"*://www.google.com/voice*"}, function(tabs) {
+			for (var i = tabs.length - 1; i >= 0; --i) {
+				chrome.tabs.sendMessage(tabs[i].id, {
+					action: "refreshPage"
+				});
+			}
+		});
+	}
+});
+
 
 // Initialize extension
 function initExtension()

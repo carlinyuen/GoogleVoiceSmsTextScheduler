@@ -587,6 +587,13 @@ jQuery.noConflict();
 					});
 					return true;
 
+				case "refreshPage": {
+					console.log("received refresh!");
+					if (confirm("Hello there! The Google Voice SMS Scheduler extension has been updated and needs to refresh the page to work. Do you want to refresh now?")) {
+						location.reload();
+					}
+				} break;
+
 				default:
 					console.log("Unknown request:", request, sender);
 					return false;
