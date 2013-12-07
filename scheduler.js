@@ -127,7 +127,7 @@ jQuery.noConflict();
 			, '		<h3>'
 			, '			<a id="gv-scheduler-collapse" title="Show/Hide Scheduled SMS Messages View" href="#">'
 			, '				<img src="' + collapseIconURL + '" alt="^" /></a>'
-			, '			<span>Scheduled SMS Messages</span>'
+			, '			<span>Scheduled SMS Messages <strong id="gv-scheduler-message-count"></strong></span>'
 			, '			<button id="gv-scheduler-reload" title="Reload Scheduled SMS Messages">'
 			, '				<img src="' + reloadIconURL + '" alt="Reload" /></button>'
 			, '			<button id="gv-scheduler-clear" title="Clear all Scheduled SMS Messages">'
@@ -144,13 +144,8 @@ jQuery.noConflict();
 	// Bind scheduledView handlers
 	function setupScheduledView()
 	{
-		// Collapse icon, also collapse if previously set that way
-		$("#gv-scheduler-collapse").on(EVENT_CLICK, collapseScheduledView);
-		chrome.storage.local.get(SETTINGS_KEY, function(data) {
-			if (data && data[SETTINGS_KEY] && data[SETTINGS_KEY][COLLAPSE_SETTINGS_KEY]) {
-				toggleScheduledView();
-			}
-		});
+		// Collapse icon
+		$("#gv-scheduler-collapse").on(EVENT_CLICK, toggleScheduledView);
 
 		// Reload icon
 		$("#gv-scheduler-reload").on(EVENT_CLICK, reloadScheduledView);
@@ -201,18 +196,18 @@ jQuery.noConflict();
 			defaultValue: new Date()
 		});
 		$('#gv-scheduler-input').keypress(function(event) {
-			if (event.which == 9) {	// Tab keycode
+			if (event.which == 9) {		// Tab keycode
 				$('#gv-scheduler-button').focus();
 			}
 		});
 
 		// When calendar icon is clicked, focus on input field to fire picker
-		$('#gv-scheduler-calendar').on('EVENT_CLICK', function() {
+		$('#gv-scheduler-calendar').on(EVENT_CLICK, function() {
 			$('#gv-scheduler-input').focus();
 		});
 
 		// When a SMS message is scheduled
-		$('#gv-scheduler-button').on('EVENT_CLICK', scheduleMessage);
+		$('#gv-scheduler-button').on(EVENT_CLICK, scheduleMessage);
 		$('#gv-scheduler-button').focus(function() {
 			$('#gv-scheduler-button').addClass('goog-button-base-focused');
 		});
@@ -246,7 +241,7 @@ jQuery.noConflict();
 	// Generates the HTML for a list item in the scheduled SMS message list
 	function createScheduledListItemHTML(recipients, dateTime, text, id)
 	{
-		return $('<li>').attr("id", id)
+		return $('<li>').addClass('gv-scheduler-message').attr("id", id)
 			.append($('<h4>').text(recipients)
 				.append([
 					'	<a class="gv-scheduler-send" href="#" title="Send this message now">'
@@ -276,7 +271,10 @@ jQuery.noConflict();
 		// Save into local storage setting
 		chrome.storage.local.get(SETTINGS_KEY, function(data)
 		{
-			if (!data || !data[SETTINGS_KEY]) {
+			if (chrome.runtime.lastError) {
+				console.log(chrome.runtime.lastError);
+			}
+			else if (!data || !data[SETTINGS_KEY]) {
 				data = {};
 				data[SETTINGS_KEY] = {};
 			}
@@ -284,6 +282,25 @@ jQuery.noConflict();
 			data[SETTINGS_KEY][COLLAPSE_SETTINGS_KEY] = collapsed;
 			chrome.storage.local.set(data);
 		});
+	}
+
+	// Update message count
+	function updateMessageCount()
+	{
+		var numMessages = $('li.gv-scheduler-message').length;
+
+		// Fade in and out message count for update
+		$('#gv-scheduler-message-count').fadeOut('fast', function() {
+			$(this).text("(" + numMessages + ")").fadeIn('fast');
+		});
+
+		// If no messages, show no messages notice
+		if (numMessages === 0) {
+			$('#gv-scheduler-list').fadeOut('normal').html('')
+				.append('<li><strong>'
+					+ chrome.i18n.getMessage("STATUS_NO_MESSAGES") + '</strong></li>')
+				.fadeIn('normal');
+		}
 	}
 
 	// Load scheduled messages and display them
@@ -299,6 +316,11 @@ jQuery.noConflict();
 		// Get scheduled messages
 		chrome.storage.local.get(STORAGE_KEY, function(items)
 		{
+			// Error check
+			if (chrome.runtime.lastError) {
+				console.log(chrome.runtime.lastError);
+			}
+
 			// Check if nothing returned
 			if (!items || !items[STORAGE_KEY] || !items[STORAGE_KEY].length)
 			{
@@ -319,6 +341,20 @@ jQuery.noConflict();
 							, message.text, message.id));
 				};
 			}
+
+			// Update message count
+			updateMessageCount();
+
+			// Show or hide view based on previous user prefs
+			chrome.storage.local.get(SETTINGS_KEY, function(data) {
+				if (chrome.runtime.lastError) {
+					console.log(chrome.runtime.lastError);
+				}
+				else if (data && data[SETTINGS_KEY]
+					&& data[SETTINGS_KEY][COLLAPSE_SETTINGS_KEY]) {
+					toggleScheduledView();
+				}
+			});
 
 			// Add some delay so it looks like it's doing some work
 			var reloadTimeInMilliseconds = (new Date()).getTime() - reloadStartTime.getTime();
@@ -378,38 +414,42 @@ jQuery.noConflict();
 		// Schedule message now
 		chrome.storage.local.get(STORAGE_KEY, function(items)
 		{
-			// If something returned, use that instead
-			var messages = [];
-			if (items && items[STORAGE_KEY]) {
-				messages = items[STORAGE_KEY];
+			if (chrome.runtime.lastError) {
+				console.log(chrome.runtime.lastError);
 			}
+			else
+			{
+				// If something returned, use that instead
+				var messages = [];
+				if (items && items[STORAGE_KEY]) {
+					messages = items[STORAGE_KEY];
+				}
 
-			// If no messages before, clear list
-			if (!messages.length) {
-				$("#gv-scheduler-list li").fadeOut('normal');
-			}
+				// If no messages before, clear list
+				if (!messages.length) {
+					$("#gv-scheduler-list li").fadeOut('normal');
+				}
 
-			// Add new message, use new Date().getTime() as unique id
-			var message = {
-				recipients: recipients
-				, dateTime: JSON.stringify(convertDateToUTC(dateTime))
-				, text: text
-				, id: ID_PREFIX + new Date().getTime()
-			};
-			messages.push(message);
+				// Add new message, use new Date().getTime() as unique id
+				var message = {
+					recipients: recipients
+					, dateTime: JSON.stringify(convertDateToUTC(dateTime))
+					, text: text
+					, id: ID_PREFIX + new Date().getTime()
+				};
+				messages.push(message);
 
-			// Resort messages by date
-			messages.sort(function(a, b) {
-				return (a.dateTime > b.dateTime
-					? 1 : (b.dateTime > a.dateTime
-						? -1 : 0));
-			});
+				// Resort messages by date
+				messages.sort(function(a, b) {
+					return (a.dateTime > b.dateTime
+						? 1 : (b.dateTime > a.dateTime
+							? -1 : 0));
+				});
 
-			// Reset data into storage
-			chrome.storage.local.set(
-				{"scheduledMessages": messages}
-				, function()
-				{
+				// Reset data into storage
+				chrome.storage.local.set({
+					"scheduledMessages": messages
+				}, function() {
 					if (chrome.runtime.lastError) {
 						console.log(chrome.runtime.lastError);
 					}
@@ -421,10 +461,14 @@ jQuery.noConflict();
 						$("#gc-quicksms-text2").val('');
 						$("#gv-scheduler-input").val('');
 						$('.goog-bubble-close-button').click();
-						$("#gv-scheduler-list").append(
-							createScheduledListItemHTML(recipients, dateTime, text, message.id));
+						$("#gv-scheduler-list").append(createScheduledListItemHTML(
+							recipients, dateTime, text, message.id));
+
+						// Update message count
+						updateMessageCount();
 					}
 				});
+			}
 		});
 	}
 
@@ -472,8 +516,13 @@ jQuery.noConflict();
 			messageID: id,
 		}, function(response) {
 			if (response.status == OK) {
-				$('#' + id).fadeOut('normal', function() {
+				$('#' + id).fadeOut('normal', function()
+				{
+					// Remove message
 					$(this).remove();
+
+					// Update message count
+					updateMessageCount();
 				});
 			} else {
 				console.log("removeMessage response:", response);
@@ -490,11 +539,8 @@ jQuery.noConflict();
 			return;
 		}
 
-		chrome.storage.local.remove("scheduledMessages", function()
-		{
-			$('#gv-scheduler-list').fadeOut('normal').html('')
-				.append('<li><strong>No scheduled messages!</strong></li>')
-				.fadeIn('normal');
+		chrome.storage.local.remove("scheduledMessages", function() {
+			updateMessageCount();	// Update message count
 		});
 	}
 
@@ -531,8 +577,13 @@ jQuery.noConflict();
 			switch (request.action)
 			{
 				case "messageSent":
-					$('#' + request.messageID).fadeOut('normal', function() {
+					$('#' + request.messageID).fadeOut('normal', function()
+					{
+						// Remove message
 						$(this).remove();
+
+						// Update message count
+						updateMessageCount();
 					});
 					return true;
 

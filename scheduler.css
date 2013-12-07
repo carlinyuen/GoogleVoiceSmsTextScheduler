@@ -43,11 +43,12 @@ button img {
 }
 #gv-scheduler-collapse img
 {
-	vertical-align: middle;
+	vertical-align: text-bottom;
+	-webkit-transform: rotate(180deg);
 	-webkit-transition: all 400ms;
 }
 .collapsed #gv-scheduler-collapse img {
-	-webkit-transform: rotate(180deg);
+	-webkit-transform: rotate(90deg);
 }
 
 #gv-scheduler-feedback
