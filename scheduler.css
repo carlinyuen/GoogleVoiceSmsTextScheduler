@@ -56,6 +56,7 @@ button img {
 	vertical-align: top;
 	font: normal 9pt/12pt Verdana;
 	float: right;
+	margin-left: 8px;
 }
 
 #gv-scheduler-list
@@ -83,7 +84,7 @@ button img {
 }
 #gv-scheduler-list li h4 span.gv-scheduler-dateTime:before
 {
-	content:"Scheduled for ";
+	content:"scheduled for ";
 	font-variant: small-caps;
 }
 

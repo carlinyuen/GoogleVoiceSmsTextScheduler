@@ -282,16 +282,13 @@ function processSendSMSResponse(message, response, sendResponse)
 // Show notification for sent messages
 function showNotification(imagePath, title, message)
 {
-	var time = /(..)(:..)/.exec(new Date());     // The prettyprinted time.
-	var hour = time[1] % 12 || 12;               // The prettyprinted hour.
-	var period = time[1] < 12 ? 'a.m.' : 'p.m.'; // The period of the day.
-
 	var data = {
 		type: "basic"
 		, iconUrl: imagePath	// The image.
-		, title: title + " at " + hour + time[2] + ' ' + period		// The title.
+		, title: title			// The title.
 		, message: message		// The body.
-//		, contextMessage: "at " + hour + time[2] + ' ' + period	// Doesn't work
+		, contextMessage: (new Date()).toLocaleString()
+		, eventTime: Date.now()
 	};
 	chrome.notifications.create("", data, function(id) {});
 }
@@ -384,7 +381,7 @@ function checkScheduledMessages()
 			return;
 		}
 
-		// Compare against the minute before
+		// Compare against different dates for checking and resetting
 		var currentDateTime = new Date();
 		var checkDateTime = new Date(currentDateTime.getTime() + 2 * REFRESH_INTERVAL);
 		var resetDateTime = new Date(currentDateTime.getTime() - 2 * REFRESH_INTERVAL);
@@ -416,7 +413,7 @@ function checkScheduledMessages()
 				{
 					// If message > 2 mins old than intended send time,
 					//  reset lock and change message time to reflect
-					if (messageDateTime <= resetDateTime) {
+					if (messageDateTime < resetDateTime) {
 						message.lock = null;
 						message.dateTime = JSON.stringify(convertDateToUTC(checkDateTime))
 					}

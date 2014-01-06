@@ -132,6 +132,7 @@ jQuery.noConflict();
 			, '				<img src="' + reloadIconURL + '" alt="Reload" /></button>'
 			, '			<button id="gv-scheduler-clear" title="Clear all Scheduled SMS Messages">'
 			, '				<img src="' + removeIconURL + '" alt="Clear" /></button>'
+			, '			<a id="gv-scheduler-feedback" href="https://chrome.google.com/webstore/support/podfahadlppahcknimehicajmjdcfieb?hl=en-US&gl=US#feature" target="_blank" title="Feature Requests on Chrome Webstore">Feature Request</a> '
 			, '			<a id="gv-scheduler-feedback" href="https://chrome.google.com/webstore/detail/sms-text-message-schedule/podfahadlppahcknimehicajmjdcfieb/reviews" target="_blank" title="Feedback on Chrome Webstore">Feedback</a>'
 			, '		</h3>'
 			, '		<ul id="gv-scheduler-list">'
@@ -249,7 +250,7 @@ jQuery.noConflict();
 					, '	<a class="gv-scheduler-remove" href="#" title="Remove this message">'
 					, '		<img src="' + removeIconURL + '" alt="x"></a>'
 					, '	<br />'].join('\n'))
-				.append($('<span>').addClass('gv-scheduler-dateTime').text(dateTime))
+				.append($('<span>').addClass('gv-scheduler-dateTime').text(dateTime.toLocaleString()))
 			).append($('<p>').text(text));
 	}
 
